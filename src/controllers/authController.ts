@@ -35,27 +35,53 @@ export const register = async (req: Request, res: Response) => {
       .json({ message: "Username or email already exists" });
   }
 
+  // check if username and email are not empty
+  if (!username || !email || !password) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
   try {
-    // 3. hash the password
+    // Hash the password
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+    console.log("Hashed password:", hashedPassword);
 
-    // 4. insert user into db
-    const newUser = await pool.query(
-      "INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING *",
-      [username, email, hashedPassword]
-    );
+    // Insert user into the database
+    const insertQuery =
+      "INSERT INTO users (username, email, password, token) VALUES ($1, $2, $3, $4) RETURNING *";
+    const newUserResult = await pool.query(insertQuery, [
+      username,
+      email,
+      hashedPassword,
+      "",
+    ]);
 
-    const user = newUser.rows[0];
+    if (newUserResult.rows.length === 0) {
+      throw new Error("Failed to insert user into the database.");
+    }
+
+    const user = newUserResult.rows[0];
+    console.log("Inserted user:", user);
+
+    // Generate JWT token
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
-      expiresIn: "1h",
+      expiresIn: "10h",
     });
+    console.log("Generated token:", token);
 
-    // 5. return success message
-    res
-      .status(201)
-      .json({ message: "User registered successfully", user, token });
+    // Update user with the token
+    const updateQuery = "UPDATE users SET token = $1 WHERE id = $2 RETURNING *";
+    const updatedUserResult = await pool.query(updateQuery, [token, user.id]);
+
+    if (updatedUserResult.rows.length === 0) {
+      throw new Error("Failed to update the user token.");
+    }
+
+    const updatedUser = updatedUserResult.rows[0];
+    console.log("Updated user with token:", updatedUser);
+
+    res.status(201).json({ user: updatedUser });
   } catch (error) {
-    console.error(error);
+    console.error("Error during user registration:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -90,7 +116,8 @@ export const login = async (req: Request, res: Response): Promise<any> => {
     });
 
     // 5. return success message with jwt token
-    res.status(200).json({ message: "Login successful", token });
+    let finalResult = { ...user, token };
+    res.status(200).json({ user: finalResult });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
