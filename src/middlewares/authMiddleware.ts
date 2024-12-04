@@ -21,6 +21,6 @@ export const verifyToken = (
     req.user = decoded as { id: string };
     next();
   } catch (error) {
-    res.status(500).json({ error: "" });
+    res.status(500).json({ error: "Failed to verify token" });
   }
 };
