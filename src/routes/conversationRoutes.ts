@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyToken } from "../middlewares/authMiddleware";
-import { fetchAllConversationsByUserId } from "../controllers/conversationsControllers";
+import { fetchAllConversationsByUserId } from "../controllers/conversationsController";
 
 const router = Router();
 
