@@ -5,6 +5,7 @@ export const fetchAllMessagesByConversationId = async (
   req: Request,
   res: Response
 ) => {
+  console.log("fetchAllMessagesByConversationId");
   const { conversationId } = req.params;
 
   try {

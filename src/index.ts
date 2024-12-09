@@ -32,13 +32,18 @@ io.on("connection", (socket) => {
   socket.on("sendMessage", async (message) => {
     const { conversationId, senderId, content } = message;
 
-    console.log("Received message:", message);
+    // console.log("Received message:", message);
 
     try {
       const savedMessage = await saveMessage(conversationId, senderId, content);
       console.log("Saved message:", savedMessage);
 
       io.to(conversationId).emit("newMessage", savedMessage);
+      io.emit("conversationUpdated", {
+        conversationId,
+        lastMessage: savedMessage.content,
+        lastMessageTime: savedMessage.created_at,
+      });
     } catch (error) {
       console.error("Error saving message:", error);
     }
