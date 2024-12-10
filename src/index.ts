@@ -6,6 +6,7 @@ import authRoutes from "./routes/authRoutes";
 import conversationRoutes from "./routes/conversationRoutes";
 import messageRoutes from "./routes/messageRoutes";
 import { saveMessage } from "./controllers/messagesController";
+import contactsRoutes from "./routes/contactsRoutes";
 
 const app = express();
 const server = http.createServer(app);
@@ -20,6 +21,7 @@ app.use(json());
 app.use("/auth", authRoutes);
 app.use("/conversations", conversationRoutes);
 app.use("/messages", messageRoutes);
+app.use("/contacts", contactsRoutes);
 
 io.on("connection", (socket) => {
   console.log("A user connected", socket.id);
