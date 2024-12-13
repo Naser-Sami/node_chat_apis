@@ -97,3 +97,33 @@ export const checkOrCreateConversation = async (
     });
   }
 };
+
+export const getDailyQuestion = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  const conversationId = req.params.id;
+
+  try {
+    const result = await pool.query(
+      `
+      SELECT content FROM messages
+      WHERE conversation_id = $1 AND sender_id = 'AI-BOT'
+      ORDER BY created_at DESC
+      LIMIT 1;
+    `,
+      [conversationId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Daily question not found" });
+    }
+
+    res.json({ question: result.rows[0].content });
+  } catch (error) {
+    console.error("Failed to fetch daily question:", error);
+    res.status(500).json({
+      error: "Internal server error: Failed to fetch daily question",
+    });
+  }
+};
